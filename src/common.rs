@@ -2,7 +2,7 @@
         unused, unused_extern_crates, unused_import_braces,
         unused_qualifications, unused_results)]
 
-#![feature(into_cow, path_ext, slice_extras)]
+#![feature(into_cow, path_ext)]
 
 extern crate curl;
 extern crate getopts;
@@ -190,7 +190,7 @@ impl<'a> Solver<'a> {
         let _ = opts.optflag("", "json", "Output JSON format");
         let _ = opts.optflag("h", "help", "Display this message");
 
-        let matches = match opts.parse(args.tail()) {
+        let matches = match opts.parse(&args[1..]) {
             Ok(m) => m,
             Err(f) => {
                 let _ = writeln!(&mut io::stderr(), "{}: {}", program, f);
@@ -266,10 +266,24 @@ fn setup_file(file_name: &str) -> Result<File, SolverError> {
 const BASE_URL: &'static str = "https://projecteuler.net/project/resources/";
 fn download(file_name: &str) -> Result<Vec<u8>, curl::ErrCode> {
     let url = format!("{}{}", BASE_URL, file_name);
-    let resp = try!(http::handle()
-                    .get(url)
-                    .exec());
-    Ok(resp.move_body())
+
+    let mut retry = 0;
+    loop {
+        let result = http::handle().get(&url[..]).exec();
+        match result {
+            Ok(resp) => {
+                return Ok(resp.move_body());
+            }
+            Err(err) => {
+                let program = env::args().next().unwrap();
+                let _ = writeln!(&mut io::stderr(), "{}: {}", program, err);
+                retry += 1;
+                if retry >= 3 {
+                    return Err(err);
+                }
+            }
+        }
+    }
 }
 
 #[macro_export]

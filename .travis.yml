@@ -1,8 +1,56 @@
 language: rust
-rust: nightly
+sudo: false
+
+addons:
+  apt:
+    packages:
+      - libcurl4-openssl-dev
+      - libelf-dev
+      - libdw-dev
+
+rust:
+  - nightly
+  # - beta
+  # - stable
+
+before_script:
+  - |
+      pip install 'travis-cargo<0.2' --user &&
+      export PATH=$HOME/.local/bin:$PATH
+
 script:
-  - make release
-  - make run-release
-  - make test
-  - make bench
-  - make doc
+  - |
+      if [ -z "${PKG_DIR}" ]; then
+        travis-cargo build -- --release &&
+        travis-cargo run -- --release --bin euler &&
+        travis-cargo test &&
+        travis-cargo bench &&
+        travis-cargo --only ${DOC_UPLOAD_VERSION} doc
+      else
+        cd "${TRAVIS_BUILD_DIR}/${PKG_DIR}"
+        travis-cargo build &&
+        travis-cargo test &&
+        travis-cargo bench
+      fi
+
+after_success:
+  - |
+      if [ -z "${PKG_DIR}" ]; then
+         travis-cargo --only ${DOC_UPLOAD_VERSION} doc-upload
+      else
+         cd "${TRAVIS_BUILD_DIR}/${PKG_DIR}"
+      fi
+  - travis-cargo coveralls --no-sudo
+
+env:
+  matrix:
+    - PKG_DIR=""
+    - PKG_DIR="pkg/cont_frac"
+    - PKG_DIR="pkg/integer"
+    - PKG_DIR="pkg/iter"
+    - PKG_DIR="pkg/playing_card"
+    - PKG_DIR="pkg/prime"
+    - PKG_DIR="pkg/seq"
+  global:
+    - TRAVIS_CARGO_NIGHTLY_FEATURE=""
+    - DOC_UPLOAD_VERSION=nightly
