@@ -4,7 +4,8 @@
         unused, unused_extern_crates, unused_import_braces,
         unused_qualifications, unused_results)]
 
-#[macro_use(problem)] extern crate common;
+#[macro_use(problem)]
+extern crate common;
 extern crate integer;
 extern crate num;
 
@@ -15,7 +16,7 @@ fn compute(max: u64, modulo: u64) -> u64 {
     let bu_m: BigUint = FromPrimitive::from_u64(modulo).unwrap();
 
     let mut sum = 0;
-    for n in (1 .. max + 1) {
+    for n in 1..(max + 1) {
         let bu_n: BigUint = FromPrimitive::from_u64(n).unwrap();
         let pow = bu_n.mod_pow(&bu_n, &bu_m).to_u64().unwrap();
         sum = (sum + pow) % modulo;

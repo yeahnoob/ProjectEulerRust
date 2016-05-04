@@ -4,14 +4,12 @@
         unused, unused_extern_crates, unused_import_braces,
         unused_qualifications, unused_results)]
 
-#![feature(range_inclusive)]
-
-#[macro_use(problem)] extern crate common;
+#[macro_use(problem)]
+extern crate common;
 extern crate num;
 extern crate polynomial;
 
-use std::iter;
-use num::{One, Integer, BigUint, FromPrimitive};
+use num::{BigUint, FromPrimitive, Integer, One};
 use num::rational::Ratio;
 use polynomial::Polynomial;
 
@@ -36,21 +34,24 @@ use polynomial::Polynomial;
 // => (x^4 + 10x^3 + 35x^2 + 50x + 24) / (2 * 3 * 4 * 5)
 
 fn probability_of_player_win<T: Integer + Clone + FromPrimitive>(turns: usize) -> Ratio<T> {
-    iter::range_inclusive(1, turns)
+    (1..(turns + 1))
         .map(|t| FromPrimitive::from_usize(t).unwrap())
         .map(|t: T| {
             let denom = t.clone() + One::one();
             let blue = Ratio::new(One::one(), denom.clone());
-            let red  = Ratio::new(t, denom);
+            let red = Ratio::new(t, denom);
             Polynomial::new(vec![blue, red])
-        }).fold(num::one::<Polynomial<_>>(), |acc, elt| acc * elt)
+        })
+        .fold(num::one::<Polynomial<_>>(), |acc, elt| acc * elt)
         .data()
         .iter()
         .take((turns + 1) / 2)
         .fold(num::zero::<Ratio<T>>(), |acc, elt| acc + elt)
 }
 
-fn max_prize<T: Integer + Clone>(p: Ratio<T>) -> T { p.denom().div_floor(p.numer()) }
+fn max_prize<T: Integer + Clone>(p: Ratio<T>) -> T {
+    p.denom().div_floor(p.numer())
+}
 
 fn solve() -> String {
     let prob = probability_of_player_win::<BigUint>(15);

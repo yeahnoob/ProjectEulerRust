@@ -4,23 +4,24 @@
         unused, unused_extern_crates, unused_import_braces,
         unused_qualifications, unused_results)]
 
-#![feature(iter_arith, range_inclusive)]
+#![feature(iter_arith)]
 
-#[macro_use(problem)] extern crate common;
+#[macro_use(problem)]
+extern crate common;
 extern crate integer;
-extern crate iter as itercrate;
+extern crate iter;
 extern crate prime;
 
-use std::iter::{self, Rev};
+use std::iter::Rev;
 use std::ops::Range;
 use integer::Integer;
-use itercrate::BitCombination;
+use iter::BitCombination;
 use prime::PrimeSet;
 
 struct Digits {
     radix: u64,
     num_digits: usize,
-    range: Rev<Range<u64>>
+    range: Rev<Range<u64>>,
 }
 
 impl Digits {
@@ -28,7 +29,7 @@ impl Digits {
         Digits {
             radix: radix,
             num_digits: num_digits,
-            range: (0 .. radix.pow(num_digits as u32)).rev()
+            range: (0..radix.pow(num_digits as u32)).rev(),
         }
     }
 }
@@ -39,7 +40,9 @@ impl Iterator for Digits {
     fn next(&mut self) -> Option<Vec<u64>> {
         self.range.next().map(|num| {
             let mut ds = num.into_digits(self.radix).rev().collect::<Vec<_>>();
-            while ds.len() < self.num_digits { ds.insert(0, 0); }
+            while ds.len() < self.num_digits {
+                ds.insert(0, 0);
+            }
             ds
         })
     }
@@ -49,7 +52,7 @@ struct RunDigits {
     d: u64,
     run_len: usize,
     other_ds: Vec<u64>,
-    iter: BitCombination
+    iter: BitCombination,
 }
 
 impl RunDigits {
@@ -58,7 +61,7 @@ impl RunDigits {
             d: d,
             run_len: run_len,
             iter: BitCombination::new(other_ds.len(), other_ds.len() + run_len),
-            other_ds: other_ds
+            other_ds: other_ds,
         }
     }
 }
@@ -68,13 +71,20 @@ impl Iterator for RunDigits {
 
     fn next(&mut self) -> Option<u64> {
         while let Some(set) = self.iter.next() {
-            let first = if set.contains(&0) { self.other_ds[0] } else { self.d };
-            if first == 0 { continue }
+            let first = if set.contains(0) {
+                self.other_ds[0]
+            } else {
+                self.d
+            };
+            if first == 0 {
+                continue;
+            }
 
             let mut j = 0;
             let mut num = 0;
-            for i in (0 .. self.other_ds.len() + self.run_len) {
-                num = num * 10 + if set.contains(&i) {
+            for i in 0..(self.other_ds.len() + self.run_len) {
+                num = num * 10 +
+                      if set.contains(i) {
                     j += 1;
                     self.other_ds[j - 1]
                 } else {
@@ -82,18 +92,22 @@ impl Iterator for RunDigits {
                 };
             }
 
-            return Some(num)
+            return Some(num);
         }
         None
     }
 }
 
 fn compute_s(ps: &PrimeSet, n: usize, d: u64) -> (usize, usize, u64) {
-    for m in iter::range_inclusive(0, n).rev() {
+    for m in (0..(n + 1)).rev() {
         let mut sum = 0;
         let mut cnt = 0;
         for mut other_ds in Digits::new(9, n - m) {
-            for i in other_ds.iter_mut() { if *i >= d { *i += 1; } }
+            for i in other_ds.iter_mut() {
+                if *i >= d {
+                    *i += 1;
+                }
+            }
 
             for num in RunDigits::new(m, d, other_ds) {
                 if ps.contains(num) {
@@ -103,7 +117,7 @@ fn compute_s(ps: &PrimeSet, n: usize, d: u64) -> (usize, usize, u64) {
             }
         }
         if sum > 0 {
-            return (m, cnt, sum)
+            return (m, cnt, sum);
         }
     }
 
@@ -114,7 +128,7 @@ fn solve() -> String {
     let n = 10;
     let ps = PrimeSet::new();
 
-    (0u64 .. 10)
+    (0u64..10)
         .map(|d| compute_s(&ps, n, d).2)
         .sum::<u64>()
         .to_string()
@@ -141,9 +155,9 @@ mod tests {
         assert_eq!((3, 1, 8887), super::compute_s(&ps, 4, 8));
         assert_eq!((3, 7, 48073), super::compute_s(&ps, 4, 9));
 
-        let total = (0u64 .. 10)
-            .map(|d| super::compute_s(&ps, 4, d).2)
-            .sum::<u64>();
+        let total = (0u64..10)
+                        .map(|d| super::compute_s(&ps, 4, d).2)
+                        .sum::<u64>();
         assert_eq!(273700, total);
     }
 }

@@ -4,19 +4,20 @@
         unused, unused_extern_crates, unused_import_braces,
         unused_qualifications, unused_results)]
 
-#![feature(range_inclusive)]
+#[macro_use(problem)]
+extern crate common;
 
-#[macro_use(problem)] extern crate common;
-
-use std::{iter, u32};
+use std::u32;
 
 fn backtrack(power: u32, depth: u32, limit: u32, cost: &mut [u32], path: &mut [u32]) {
-    if power > limit || depth > cost[power as usize] { return }
+    if power > limit || depth > cost[power as usize] {
+        return;
+    }
 
     cost[power as usize] = depth;
     path[depth as usize] = power;
 
-    for i in iter::range_inclusive(0, depth).rev() {
+    for i in (0..(depth + 1)).rev() {
         backtrack(power + path[i as usize], depth + 1, limit, cost, path);
     }
 }
@@ -32,11 +33,11 @@ fn compute_cost(limit: u32) -> Vec<u32> {
 
 fn solve() -> String {
     let limit = 200;
-    compute_cost(limit)[1 .. (limit as usize) + 1]
+    compute_cost(limit)[1..(limit as usize) + 1]
         .iter()
         .fold(0, |x, &y| x + y)
         .to_string()
-    }
+}
 
 problem!("1582", solve);
 

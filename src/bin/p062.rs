@@ -4,10 +4,11 @@
         unused, unused_extern_crates, unused_import_braces,
         unused_qualifications, unused_results)]
 
-#[macro_use(problem)] extern crate common;
+#[macro_use(problem)]
+extern crate common;
 extern crate integer;
 
-use std::collections::{HashSet, HashMap};
+use std::collections::{HashMap, HashSet};
 use std::collections::hash_map::Entry;
 use integer::Integer;
 
@@ -20,7 +21,7 @@ fn perm_exact(cnt: usize) -> HashSet<u64> {
         let cube = n * n * n;
         if cube >= limit {
             if !set.is_empty() {
-                return set
+                return set;
             }
 
             map.clear();

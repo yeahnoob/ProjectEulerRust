@@ -4,9 +4,8 @@
         unused, unused_extern_crates, unused_import_braces,
         unused_qualifications, unused_results)]
 
-#![feature(iter_cmp)]
-
-#[macro_use(problem)] extern crate common;
+#[macro_use(problem)]
+extern crate common;
 extern crate prime;
 
 use prime::PrimeSet;
@@ -17,23 +16,27 @@ use prime::PrimeSet;
 // p(1) = 1 + a + b => a > -(1+b)
 // p(2) = 4 + 2a + b
 fn get_limit_n(ps: &PrimeSet, a: i32, b: i32) -> u32 {
-    (0..).take_while(|&n| {
+    (0..)
+        .take_while(|&n| {
             let val = n * n + a * n + b;
             (val >= 0 && ps.contains(val as u64))
-        }).last().unwrap() as u32
+        })
+        .last()
+        .unwrap() as u32
 }
 
 fn compute(limit: u64) -> i32 {
     let ps = PrimeSet::new();
     let (a, b, _len) = ps.iter()
-        .take_while(|&p| p < limit)
-        .filter_map(|p| {
-            let b = p as i32;
-            (-b .. 1000)
-                .map(|a| (a, b, get_limit_n(&ps, a, b)))
-                .max_by(|&(_a, _b, len)| len)
-        }).max_by(|&(_a, _b, len)| len)
-        .unwrap();
+                         .take_while(|&p| p < limit)
+                         .filter_map(|p| {
+                             let b = p as i32;
+                             (-b..1000)
+                                 .map(|a| (a, b, get_limit_n(&ps, a, b)))
+                                 .max_by_key(|&(_a, _b, len)| len)
+                         })
+                         .max_by_key(|&(_a, _b, len)| len)
+                         .unwrap();
     a * b
 }
 

@@ -4,45 +4,48 @@
         unused, unused_extern_crates, unused_import_braces,
         unused_qualifications, unused_results)]
 
-#![feature(step_by, range_inclusive, iter_arith)]
+#![feature(step_by, iter_arith)]
 #![cfg_attr(test, feature(test))]
 
 extern crate num;
-#[cfg(test)] extern crate test;
+#[cfg(test)]
+extern crate test;
 
 use std::{cmp, mem};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::hash::Hash;
-use std::iter::{self, IntoIterator, RandomAccessIterator};
+use std::iter::IntoIterator;
 use std::rc::Rc;
-use num::{One, Zero, Integer, FromPrimitive};
+use num::{FromPrimitive, Integer, One, Zero};
 
-const SMALL_PRIMES: &'static [u64] = &[
-      2,   3,   5,   7,  11,  13,  17,  19,  23,  29,  31,  37,  41,  43,  47,
-     53,  59,  61,  67,  71,  73,  79,  83,  89,  97, 101, 103, 107, 109, 113,
-    127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197,
-    199, 211, 223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277, 281,
-    283, 293, 307, 311, 313, 317, 331, 337, 347, 349, 353, 359, 367, 373, 379,
-    383, 389, 397, 401, 409, 419, 421, 431, 433, 439, 443, 449, 457, 461, 463,
-    467, 479, 487, 491, 499, 503, 509, 521, 523, 541, 547, 557, 563, 569, 571,
-    577, 587, 593, 599, 601, 607, 613, 617, 619, 631, 641, 643, 647, 653, 659,
-    661, 673, 677, 683, 691, 701, 709, 719, 727, 733, 739, 743, 751, 757, 761,
-    769, 773, 787, 797, 809, 811, 821, 823, 827, 829, 839, 853, 857, 859, 863,
-    877, 881, 883, 887, 907, 911, 919, 929, 937, 941, 947, 953, 967, 971, 977,
-    983, 991, 997
-];
+const SMALL_PRIMES: &'static [u64] = &[2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53,
+                                       59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109,
+                                       113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179,
+                                       181, 191, 193, 197, 199, 211, 223, 227, 229, 233, 239, 241,
+                                       251, 257, 263, 269, 271, 277, 281, 283, 293, 307, 311, 313,
+                                       317, 331, 337, 347, 349, 353, 359, 367, 373, 379, 383, 389,
+                                       397, 401, 409, 419, 421, 431, 433, 439, 443, 449, 457, 461,
+                                       463, 467, 479, 487, 491, 499, 503, 509, 521, 523, 541, 547,
+                                       557, 563, 569, 571, 577, 587, 593, 599, 601, 607, 613, 617,
+                                       619, 631, 641, 643, 647, 653, 659, 661, 673, 677, 683, 691,
+                                       701, 709, 719, 727, 733, 739, 743, 751, 757, 761, 769, 773,
+                                       787, 797, 809, 811, 821, 823, 827, 829, 839, 853, 857, 859,
+                                       863, 877, 881, 883, 887, 907, 911, 919, 929, 937, 941, 947,
+                                       953, 967, 971, 977, 983, 991, 997];
 
 const INITIAL_CAPACITY: usize = 10000;
 
 struct PrimeInner {
-    data: Vec<u64>
+    data: Vec<u64>,
 }
 
 impl PrimeInner {
     #[inline]
-    fn new() -> PrimeInner { PrimeInner::with_capacity(INITIAL_CAPACITY) }
+    fn new() -> PrimeInner {
+        PrimeInner::with_capacity(INITIAL_CAPACITY)
+    }
 
     #[inline]
     fn new_empty() -> PrimeInner {
@@ -60,20 +63,27 @@ impl PrimeInner {
     }
 
     #[inline]
-    fn max_prime(&self) -> u64 { *self.data.last().unwrap() }
+    fn max_prime(&self) -> u64 {
+        *self.data.last().unwrap()
+    }
 
     #[inline]
-    fn nth(&mut self, n: usize) -> u64 { self.grow(n + 1); self.data[n] }
+    fn nth(&mut self, n: usize) -> u64 {
+        self.grow(n + 1);
+        self.data[n]
+    }
 
     #[inline]
     fn contains(&mut self, n: u64) -> bool {
         if n < self.max_prime() {
-            return self.data.binary_search(&n).is_ok()
+            return self.data.binary_search(&n).is_ok();
         }
 
-        if !self.is_coprime(n) { return false }
+        if !self.is_coprime(n) {
+            return false;
+        }
 
-        (self.data.len() ..)
+        (self.data.len()..)
             .map(|i| self.nth(i))
             .take_while(|&p| p * p <= n)
             .all(|p| !n.is_multiple_of(&p))
@@ -81,18 +91,25 @@ impl PrimeInner {
 
     #[inline]
     fn is_coprime(&self, n: u64) -> bool {
-        self.data.iter()
-            .take_while(|& &p| p * p <= n)
+        self.data
+            .iter()
+            .take_while(|&&p| p * p <= n)
             .all(|&p| !n.is_multiple_of(&p))
     }
 
     #[inline]
     fn grow(&mut self, len: usize) {
-        if self.data.len() >= len { return }
+        if self.data.len() >= len {
+            return;
+        }
 
-        for n in (self.max_prime() + 2 ..).step_by(2) {
-            if self.is_coprime(n) { self.data.push(n); }
-            if self.data.len() >= len { return; }
+        for n in (self.max_prime() + 2..).step_by(2) {
+            if self.is_coprime(n) {
+                self.data.push(n);
+            }
+            if self.data.len() >= len {
+                return;
+            }
         }
     }
 }
@@ -100,17 +117,21 @@ impl PrimeInner {
 /// Prime number set
 #[derive(Clone)]
 pub struct PrimeSet {
-    data: Rc<RefCell<PrimeInner>>
+    data: Rc<RefCell<PrimeInner>>,
 }
 
 impl PrimeSet {
     /// Create a new prime number generator.
     #[inline]
-    pub fn new() -> PrimeSet { PrimeSet::from_inner(PrimeInner::new()) }
+    pub fn new() -> PrimeSet {
+        PrimeSet::from_inner(PrimeInner::new())
+    }
 
     /// Create a new prime number generator with empty buffers.
     #[inline]
-    pub fn new_empty() -> PrimeSet { PrimeSet::from_inner(PrimeInner::new_empty()) }
+    pub fn new_empty() -> PrimeSet {
+        PrimeSet::from_inner(PrimeInner::new_empty())
+    }
 
     /// Create a new prime number generator with specifying buffer capacity.
     #[inline]
@@ -131,7 +152,9 @@ impl PrimeSet {
     /// assert_eq!(743, ps.nth(131));
     /// ```
     #[inline]
-    pub fn nth(&self, n: usize) -> u64 { self.data.borrow_mut().nth(n) }
+    pub fn nth(&self, n: usize) -> u64 {
+        self.data.borrow_mut().nth(n)
+    }
 
     /// An iterator visiting all prime numbers in ascending order.
     ///
@@ -147,21 +170,26 @@ impl PrimeSet {
     /// ```
     #[inline]
     pub fn iter<'a>(&'a self) -> Nums {
-        Nums { idx: 0, data: self.data.clone() }
+        Nums {
+            idx: 0,
+            data: self.data.clone(),
+        }
     }
 
     /// Return `true` if the given number is prime.
     #[inline]
-    pub fn contains(&self, n: u64) -> bool { self.data.borrow_mut().contains(n) }
+    pub fn contains(&self, n: u64) -> bool {
+        self.data.borrow_mut().contains(n)
+    }
 
     /// Calculates the combination of the number
     #[inline]
     pub fn combination(&self, n: u64, r: u64) -> u64 {
         let mut fac = Factorized::<u64>::new(self);
-        for n in iter::range_inclusive(r + 1, n) {
+        for n in (r + 1)..(n + 1) {
             fac.mul_assign(n);
         }
-        for n in iter::range_inclusive(1, n - r) {
+        for n in 1..(n - r + 1) {
             fac.div_assign(n);
         }
         fac.into_integer()
@@ -170,7 +198,6 @@ impl PrimeSet {
     fn from_inner(inner: PrimeInner) -> PrimeSet {
         PrimeSet { data: Rc::new(RefCell::new(inner)) }
     }
-
 }
 
 impl<'a> IntoIterator for &'a PrimeSet {
@@ -185,7 +212,7 @@ impl<'a> IntoIterator for &'a PrimeSet {
 /// Prime number iterator
 pub struct Nums {
     idx: usize,
-    data: Rc<RefCell<PrimeInner>>
+    data: Rc<RefCell<PrimeInner>>,
 }
 
 impl Iterator for Nums {
@@ -209,7 +236,9 @@ pub trait Factorize: Integer + FromPrimitive + Clone {
 
     /// Calculates the number of all positive divisors.
     fn num_of_divisor(&self, ps: &PrimeSet) -> u64 {
-        if self.is_zero() { return Zero::zero() }
+        if self.is_zero() {
+            return Zero::zero();
+        }
         self.factorize(ps)
             .map(|(_base, exp)| (exp as u64) + 1)
             .product()
@@ -217,13 +246,16 @@ pub trait Factorize: Integer + FromPrimitive + Clone {
 
     /// Calculates the sum of all positive divisors.
     fn sum_of_divisor(&self, ps: &PrimeSet) -> Self {
-        if self.is_zero() { return Zero::zero() }
+        if self.is_zero() {
+            return Zero::zero();
+        }
         let one: Self = One::one();
         self.factorize(ps)
             .map(|(base, exp)| {
                 let denom = base.clone() - one.clone();
                 (num::pow(base.clone(), (exp as usize) + 1) - one.clone()) / denom
-            }).fold(num::one::<Self>(), |acc, n| acc * n)
+            })
+            .fold(num::one::<Self>(), |acc, n| acc * n)
     }
 
     /// Calculates the number of proper positive divisors.
@@ -269,7 +301,7 @@ trait_impl_signed!(isize i8 i16 i32 i64);
 /// Factors iterator.
 pub struct Factors<T> {
     num: T,
-    iter: Nums
+    iter: Nums,
 }
 
 impl<T: Integer + FromPrimitive + Clone> Iterator for Factors<T> {
@@ -277,13 +309,15 @@ impl<T: Integer + FromPrimitive + Clone> Iterator for Factors<T> {
 
     #[inline]
     fn next(&mut self) -> Option<Factor<T>> {
-        if self.num <= One::one() { return None }
+        if self.num <= One::one() {
+            return None;
+        }
 
         while let Some(p) = self.iter.next() {
             let p: T = FromPrimitive::from_u64(p).unwrap();
             if p.clone() * p.clone() > self.num {
                 let n = mem::replace(&mut self.num, One::one());
-                return Some((n, 1))
+                return Some((n, 1));
             }
 
             if self.num.is_multiple_of(&p) {
@@ -293,7 +327,7 @@ impl<T: Integer + FromPrimitive + Clone> Iterator for Factors<T> {
                     exp += 1;
                     self.num = self.num.clone() / p.clone();
                 }
-                return Some((p, exp))
+                return Some((p, exp));
             }
         }
 
@@ -307,25 +341,23 @@ impl<T: Integer + FromPrimitive + Clone> Iterator for Factors<T> {
 /// # Example
 ///
 /// ```
-///#![feature(range_inclusive)]
-///
 /// use prime::{Factorized, PrimeSet};
 /// use std::iter;
 ///
 /// // Calculates 40C20
 /// let ps = PrimeSet::new();
 /// let mut fac = Factorized::<u64>::new(&ps);
-/// for n in iter::range_inclusive(21, 40) {
+/// for n in 21..41 {
 ///     fac.mul_assign(n);
 /// }
-/// for n in iter::range_inclusive(1, 20) {
+/// for n in 1..21 {
 ///     fac.div_assign(n);
 /// }
 /// assert_eq!(137846528820, fac.into_integer());
 /// ```
 pub struct Factorized<'a, T> {
     ps: &'a PrimeSet,
-    map: HashMap<T, i32>
+    map: HashMap<T, i32>,
 }
 
 impl<'a, T: Factorize + Eq + Hash> Factorized<'a, T> {
@@ -333,12 +365,18 @@ impl<'a, T: Factorize + Eq + Hash> Factorized<'a, T> {
     ///
     /// The empty factorized number represents `1`.
     pub fn new(ps: &PrimeSet) -> Factorized<T> {
-        Factorized { ps: ps, map: HashMap::new() }
+        Factorized {
+            ps: ps,
+            map: HashMap::new(),
+        }
     }
 
     /// Creates a factorized number from an integer type.
     pub fn from_integer(ps: &PrimeSet, n: T) -> Factorized<T> {
-        Factorized { ps: ps, map: n.factorize(ps).collect() }
+        Factorized {
+            ps: ps,
+            map: n.factorize(ps).collect(),
+        }
     }
 
     /// Converts the factorized number into an integer type.
@@ -359,12 +397,14 @@ impl<'a, T: Factorize + Eq + Hash> Factorized<'a, T> {
     pub fn lcm_with(&mut self, n: T) {
         for (b, e) in n.factorize(self.ps) {
             match self.map.entry(b) {
-                Vacant(entry)   => { let _ = entry.insert(e); }
+                Vacant(entry) => {
+                    let _ = entry.insert(e);
+                }
                 Occupied(entry) => {
                     let p = entry.into_mut();
                     *p = cmp::max(e, *p);
                 }
-            };
+            }
         }
     }
 
@@ -372,8 +412,12 @@ impl<'a, T: Factorize + Eq + Hash> Factorized<'a, T> {
     pub fn mul_assign(&mut self, n: T) {
         for (b, e) in n.factorize(self.ps) {
             match self.map.entry(b) {
-                Vacant(entry)   => { let _ = entry.insert(e); }
-                Occupied(entry) => { *entry.into_mut() += e; }
+                Vacant(entry) => {
+                    let _ = entry.insert(e);
+                }
+                Occupied(entry) => {
+                    *entry.into_mut() += e;
+                }
             }
         }
     }
@@ -382,8 +426,12 @@ impl<'a, T: Factorize + Eq + Hash> Factorized<'a, T> {
     pub fn div_assign(&mut self, n: T) {
         for (b, e) in n.factorize(self.ps) {
             match self.map.entry(b) {
-                Vacant(entry)   => { let _ = entry.insert(-e); }
-                Occupied(entry) => { *entry.into_mut() -= e; }
+                Vacant(entry) => {
+                    let _ = entry.insert(-e);
+                }
+                Occupied(entry) => {
+                    *entry.into_mut() -= e;
+                }
             }
         }
     }
@@ -391,7 +439,7 @@ impl<'a, T: Factorize + Eq + Hash> Factorized<'a, T> {
 
 #[cfg(test)]
 mod tests {
-    use super::{PrimeSet, Factor, Factorize};
+    use super::{Factor, Factorize, PrimeSet};
 
     #[test]
     fn iter() {
@@ -417,7 +465,7 @@ mod tests {
     #[test]
     fn multi_iter() {
         let ps = PrimeSet::new();
-        for _p1 in &ps{
+        for _p1 in &ps {
             for _p2 in &ps {
                 break;
             }
@@ -461,13 +509,9 @@ mod tests {
 
     #[test]
     fn num_of_divisor() {
-        let pairs = &[
-            (0, 0),
-            (1, 1), (2, 2), (3, 2), (4, 3), (5, 2), (6, 4),
-            (7, 2), (8, 4), (9, 3), (10, 4), (11, 2), (12, 6),
-            (24, 8), (36, 9), (48, 10), (60, 12),
-            (50, 6)
-            ];
+        let pairs = &[(0, 0), (1, 1), (2, 2), (3, 2), (4, 3), (5, 2), (6, 4), (7, 2), (8, 4),
+                      (9, 3), (10, 4), (11, 2), (12, 6), (24, 8), (36, 9), (48, 10), (60, 12),
+                      (50, 6)];
 
         let ps = PrimeSet::new();
         for &(n, num_div) in pairs {
@@ -478,13 +522,9 @@ mod tests {
 
     #[test]
     fn sum_of_divisor() {
-        let pairs = &[
-            (0, 0),
-            (1, 1), (2, 3), (3, 4), (4, 7), (5, 6), (6, 12),
-            (7, 8), (8, 15), (9, 13), (10, 18), (11, 12), (12, 28),
-            (24, 60), (36, 91), (48, 124), (60, 168),
-            (50, 93)
-            ];
+        let pairs = &[(0, 0), (1, 1), (2, 3), (3, 4), (4, 7), (5, 6), (6, 12), (7, 8), (8, 15),
+                      (9, 13), (10, 18), (11, 12), (12, 28), (24, 60), (36, 91), (48, 124),
+                      (60, 168), (50, 93)];
 
         let ps = PrimeSet::new();
         for &(n, sum_div) in pairs {
@@ -512,15 +552,15 @@ mod bench {
 
     #[bench]
     fn get_5000th(bh: &mut Bencher) {
-        bh.iter(|| { PrimeSet::new().nth(5000) });
+        bh.iter(|| PrimeSet::new().nth(5000));
     }
 
     #[bench]
     fn get_below_5000th(bh: &mut Bencher) {
         bh.iter(|| {
-                let ps = PrimeSet::new();
-                for _p in ps.iter().take(5000) {}
-            });
+            let ps = PrimeSet::new();
+            for _p in ps.iter().take(5000) {}
+        });
     }
 
 }

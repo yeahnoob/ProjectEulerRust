@@ -4,9 +4,8 @@
         unused, unused_extern_crates, unused_import_braces,
         unused_qualifications, unused_results)]
 
-#![feature(iter_cmp)]
-
-#[macro_use(problem)] extern crate common;
+#[macro_use(problem)]
+extern crate common;
 extern crate integer;
 extern crate seq;
 
@@ -17,10 +16,10 @@ use seq::PrimitivePythagoreans;
 fn num_sum_pythagorean(limit: u32) -> HashMap<u32, u32> {
     let mut map = HashMap::<u32, u32>::new();
 
-    for m in (1 .. ((1 + limit).sqrt() - 1) / 2) {
+    for m in 1..(((1 + limit).sqrt() - 1) / 2) {
         for (a, b, c) in PrimitivePythagoreans::new(m) {
             let s = a + b + c;
-            for k in (1 .. limit / s + 1) {
+            for k in 1..(limit / s + 1) {
                 let new_val = map.get(&(k * s)).map_or(1, |&v| v + 1);
                 let _ = map.insert(k * s, new_val);
             }
@@ -32,7 +31,7 @@ fn num_sum_pythagorean(limit: u32) -> HashMap<u32, u32> {
 
 fn compute(limit: u32) -> u32 {
     let map = num_sum_pythagorean(limit);
-    let (max_key, _max_val) = map.iter().max_by(|&(&_k, &v)| v).unwrap();
+    let (max_key, _max_val) = map.iter().max_by_key(|&(&_k, &v)| v).unwrap();
     *max_key
 }
 

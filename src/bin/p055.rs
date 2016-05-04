@@ -5,7 +5,8 @@
         unused_qualifications, unused_results)]
 
 extern crate num;
-#[macro_use(problem)] extern crate common;
+#[macro_use(problem)]
+extern crate common;
 
 use std::str::FromStr;
 use num::{BigUint, FromPrimitive};
@@ -19,16 +20,18 @@ fn reverse(n: &BigUint) -> BigUint {
 fn is_lychrel(n: u32, limit: usize) -> bool {
     let n: BigUint = FromPrimitive::from_u32(n).unwrap();
     let mut sum = &n + reverse(&n);
-    for _ in (0 .. limit) {
+    for _ in 0..limit {
         let rev_sum = reverse(&sum);
-        if rev_sum == sum { return false }
+        if rev_sum == sum {
+            return false;
+        }
         sum = sum + rev_sum;
     }
     true
 }
 
 fn compute(max: u32, limit: usize) -> usize {
-    (1 .. max + 1)
+    (1..(max + 1))
         .filter(|&n| is_lychrel(n, limit))
         .count()
 }

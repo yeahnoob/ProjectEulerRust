@@ -4,7 +4,8 @@
         unused, unused_extern_crates, unused_import_braces,
         unused_qualifications, unused_results)]
 
-#[macro_use(problem)] extern crate common;
+#[macro_use(problem)]
+extern crate common;
 extern crate integer;
 extern crate prime;
 
@@ -16,8 +17,8 @@ fn is_circular_prime(ps: &PrimeSet, n: u64) -> bool {
     let ds = n.into_digits(radix).collect::<Vec<_>>();
 
     let mut buf = ds.clone();
-    for i in (1 .. ds.len()) {
-        for j in (0 .. buf.len()) {
+    for i in 1..ds.len() {
+        for j in 0..buf.len() {
             buf[j] = ds[(i + j) % ds.len()];
         }
         let circ = Integer::from_digits(buf.iter().map(|&x| x), radix);
@@ -32,9 +33,9 @@ fn is_circular_prime(ps: &PrimeSet, n: u64) -> bool {
 fn compute(limit: u64) -> usize {
     let ps = PrimeSet::new();
     ps.iter()
-        .take_while(|&p| p < limit)
-        .filter(|&n| is_circular_prime(&ps, n))
-        .count()
+      .take_while(|&p| p < limit)
+      .filter(|&n| is_circular_prime(&ps, n))
+      .count()
 }
 
 fn solve() -> String {

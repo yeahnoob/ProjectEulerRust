@@ -50,7 +50,7 @@
 //! `r-1` 週目の連続したセル2つと隣接する。
 //!
 //! ### `m \neq 6r-1` の場合
-//
+//!
 //! `m \neq 6r-1` の場合、連続した 2 つセルとの差 2 つは、いずれかは必ず偶数となる。
 //! よって、これら 4 つのセルの数値との差のうち素数となるのは最大 2 つである。
 //! すなわち、辺のセルについては `PD(n)` が 3 となることはない。
@@ -135,7 +135,8 @@
 
 #![cfg_attr(test, feature(iter_arith))]
 
-#[macro_use(problem)] extern crate common;
+#[macro_use(problem)]
+extern crate common;
 extern crate prime;
 
 use std::mem;
@@ -145,17 +146,19 @@ use prime::PrimeSet;
 struct PdTriple {
     n: u64,
     r: u64,
-    triple: (u64, u64, u64)
+    triple: (u64, u64, u64),
 }
 
 struct PdTriples {
     r: u64,
-    next: Option<PdTriple>
+    next: Option<PdTriple>,
 }
 
 impl PdTriples {
     #[inline]
-    fn new() -> PdTriples { PdTriples { r: 0, next: None } }
+    fn new() -> PdTriples {
+        PdTriples { r: 0, next: None }
+    }
 }
 
 impl Iterator for PdTriples {
@@ -164,30 +167,49 @@ impl Iterator for PdTriples {
     #[inline]
     fn next(&mut self) -> Option<PdTriple> {
         if self.next.is_some() {
-            return mem::replace(&mut self.next, None)
+            return mem::replace(&mut self.next, None);
         }
 
         let r = self.r;
         self.r += 1;
 
-        if r == 0 { return Some(PdTriple { n: 1, r: 0, triple: (2, 3, 5) }) }
-        if r > 1 {
-            let n = 3*r*r + 3*r + 1;
-            self.next = Some(PdTriple { n: n, r: r, triple: (6*r-1, 6*r+5, 12*r-7) });
+        if r == 0 {
+            return Some(PdTriple {
+                n: 1,
+                r: 0,
+                triple: (2, 3, 5),
+            });
         }
-        let n = 3*r*r - 3*r + 2;
-        Some(PdTriple { n: n, r: r, triple: (12*r+5, 6*r+1, 6*r-1) })
+        if r > 1 {
+            let n = 3 * r * r + 3 * r + 1;
+            self.next = Some(PdTriple {
+                n: n,
+                r: r,
+                triple: (6 * r - 1, 6 * r + 5, 12 * r - 7),
+            });
+        }
+        let n = 3 * r * r - 3 * r + 2;
+        Some(PdTriple {
+            n: n,
+            r: r,
+            triple: (12 * r + 5, 6 * r + 1, 6 * r - 1),
+        })
     }
 }
 
 struct Pd3Nums {
     iter: PdTriples,
-    ps: PrimeSet
+    ps: PrimeSet,
 }
 
 impl Pd3Nums {
     #[inline]
-    fn new() -> Pd3Nums { Pd3Nums { iter: PdTriples::new(), ps: PrimeSet::new() } }
+    fn new() -> Pd3Nums {
+        Pd3Nums {
+            iter: PdTriples::new(),
+            ps: PrimeSet::new(),
+        }
+    }
 }
 
 impl Iterator for Pd3Nums {
@@ -198,7 +220,7 @@ impl Iterator for Pd3Nums {
         loop {
             let PdTriple { n, triple: (a, b, c), ..} = self.iter.next().unwrap();
             if self.ps.contains(a) && self.ps.contains(b) && self.ps.contains(c) {
-                return Some(n)
+                return Some(n);
             }
         }
     }
@@ -212,16 +234,22 @@ problem!("14516824220", solve);
 
 #[cfg(test)]
 mod tests {
-    use super::{PdTriple, PdTriples, Pd3Nums};
+    use super::{Pd3Nums, PdTriple, PdTriples};
 
-    fn a(r: u64) -> u64 { if r == 0 { 1 } else { 6 * r } }
+    fn a(r: u64) -> u64 {
+        if r == 0 {
+            1
+        } else {
+            6 * r
+        }
+    }
     fn b(r: u64, m: u64) -> u64 {
         if r == 0 {
             assert_eq!(0, m);
-            return 1
+            return 1;
         }
         assert!(m < 6 * r);
-        (0 .. r).map(a).sum::<u64>() + 1 + m
+        (0..r).map(a).sum::<u64>() + 1 + m
     }
 
     #[test]
@@ -235,8 +263,8 @@ mod tests {
     fn test_b() {
         assert_eq!(1, b(0, 0));
         let mut n = 2;
-        for r in (1u64 .. 10) {
-            for m in (0 .. a(r)) {
+        for r in 1u64..10 {
+            for m in 0..a(r) {
                 assert_eq!(n, b(r, m));
                 n += 1;
             }
@@ -246,24 +274,37 @@ mod tests {
     #[test]
     fn pd_triples() {
         let mut it = PdTriples::new();
-        assert_eq!(Some(PdTriple { n: b(0, 0), r: 0, triple: (2, 3, 5)}), it.next());
+        assert_eq!(Some(PdTriple {
+                       n: b(0, 0),
+                       r: 0,
+                       triple: (2, 3, 5),
+                   }),
+                   it.next());
         let n = b(1, 0);
-        assert_eq!(Some(PdTriple { n: n, r: 1, triple: (b(2, 11) - n,
-                                                        b(2, 1)  - n,
-                                                        b(1, 5)  - n)}),
+        assert_eq!(Some(PdTriple {
+                       n: n,
+                       r: 1,
+                       triple: (b(2, 11) - n, b(2, 1) - n, b(1, 5) - n),
+                   }),
                    it.next());
 
-        for r in (2u64 .. 100) {
+        for r in 2u64..100 {
             let n = b(r, 0);
-            assert_eq!(Some(PdTriple { n: n, r: r, triple: (b(r+1, 6*r+5) - n,
-                                                            b(r+1, 1)     - n,
-                                                            b(r,   6*r-1) - n) }),
+            assert_eq!(Some(PdTriple {
+                           n: n,
+                           r: r,
+                           triple: (b(r + 1, 6 * r + 5) - n,
+                                    b(r + 1, 1) - n,
+                                    b(r, 6 * r - 1) - n),
+                       }),
                        it.next());
 
-            let n = b(r, 6*r-1);
-            assert_eq!(Some(PdTriple { n: n, r: r, triple: (n - b(r,0),
-                                                            b(r+1, 6*r+4) - n,
-                                                            n - b(r-1, 0))}),
+            let n = b(r, 6 * r - 1);
+            assert_eq!(Some(PdTriple {
+                           n: n,
+                           r: r,
+                           triple: (n - b(r, 0), b(r + 1, 6 * r + 4) - n, n - b(r - 1, 0)),
+                       }),
                        it.next());
         }
     }

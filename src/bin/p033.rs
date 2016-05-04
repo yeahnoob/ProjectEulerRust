@@ -4,7 +4,8 @@
         unused, unused_extern_crates, unused_import_braces,
         unused_qualifications, unused_results)]
 
-#[macro_use(problem)] extern crate common;
+#[macro_use(problem)]
+extern crate common;
 extern crate num;
 
 use num::Integer;
@@ -26,8 +27,8 @@ fn compute() -> u32 {
     let mut prod_numer = 1;
     let mut prod_denom = 1;
 
-    for b in (1u32 .. 10) {
-        for c in (b + 1 .. 10) {
+    for b in 1u32..10 {
+        for c in (b + 1)..10 {
             // Pattern 1
             let a_numer = 9 * b * c;
             let a_denom = 10 * c - b;

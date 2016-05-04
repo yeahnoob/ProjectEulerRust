@@ -4,9 +4,10 @@
         unused, unused_extern_crates, unused_import_braces,
         unused_qualifications, unused_results)]
 
-#![feature(iter_arith, vec_push_all)]
+#![feature(iter_arith)]
 
-#[macro_use(problem)] extern crate common;
+#[macro_use(problem)]
+extern crate common;
 extern crate prime;
 
 use std::collections::HashMap;
@@ -14,20 +15,22 @@ use prime::PrimeSet;
 
 fn concat_num(n: u64, m: u64) -> u64 {
     let mut d = 1;
-    while d <= m { d *= 10; }
+    while d <= m {
+        d *= 10;
+    }
     n * d + m
 }
 
 struct ConcatPrimeNums {
     ps: PrimeSet,
-    iter: prime::Nums
+    iter: prime::Nums,
 }
 
 impl ConcatPrimeNums {
     fn new(ps: &PrimeSet) -> ConcatPrimeNums {
         ConcatPrimeNums {
             ps: ps.clone(),
-            iter: ps.iter()
+            iter: ps.iter(),
         }
     }
 }
@@ -37,13 +40,14 @@ impl Iterator for ConcatPrimeNums {
 
     fn next(&mut self) -> Option<(u64, Vec<u64>)> {
         let n = self.iter.next().unwrap();
-        let pairs = self.ps.iter()
-            .take_while(|&m| m <= n)
-            .filter(|&m| {
-                (n + m) % 3 != 0 &&
-                    self.ps.contains(concat_num(n, m)) &&
-                    self.ps.contains(concat_num(m, n))
-            }).collect();
+        let pairs = self.ps
+                        .iter()
+                        .take_while(|&m| m <= n)
+                        .filter(|&m| {
+                            (n + m) % 3 != 0 && self.ps.contains(concat_num(n, m)) &&
+                            self.ps.contains(concat_num(m, n))
+                        })
+                        .collect();
         Some((n, pairs))
     }
 }
@@ -55,8 +59,14 @@ fn union_vec(v1: &[u64], v2: &[u64]) -> Vec<u64> {
     let l1 = v1.len();
     let l2 = v2.len();
     while i1 < l1 && i2 < l2 {
-        if v1[i1] < v2[i2] { i1 += 1; continue }
-        if v1[i1] > v2[i2] { i2 += 1; continue }
+        if v1[i1] < v2[i2] {
+            i1 += 1;
+            continue;
+        }
+        if v1[i1] > v2[i2] {
+            i2 += 1;
+            continue;
+        }
         result.push(v1[i1]);
         i1 += 1;
         i2 += 1;
@@ -68,7 +78,7 @@ fn find_chain(pairs: &[u64], set: &[u64], map: &HashMap<u64, Vec<u64>>) -> Vec<V
     let mut result = Vec::new();
 
     for (i, &p) in pairs.iter().enumerate() {
-        let union_pairs = union_vec(&pairs[.. i], &map.get(&p).unwrap());
+        let union_pairs = union_vec(&pairs[..i], &map.get(&p).unwrap());
         let pset = {
             let mut v = vec![p];
             v.extend(set.iter().map(|&x| x));
@@ -77,7 +87,7 @@ fn find_chain(pairs: &[u64], set: &[u64], map: &HashMap<u64, Vec<u64>>) -> Vec<V
         if union_pairs.is_empty() {
             result.push(pset);
         } else {
-            result.push_all(&find_chain(&union_pairs, &pset, map));
+            result.extend(find_chain(&union_pairs, &pset, map));
         }
     }
 
@@ -92,7 +102,7 @@ fn compute(len: usize) -> Vec<u64> {
         if pairs.len() >= len {
             for set in find_chain(&pairs, &[n], &map) {
                 if set.len() >= len {
-                    return set
+                    return set;
                 }
             }
         }

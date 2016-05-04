@@ -7,7 +7,7 @@
 extern crate num;
 
 use std::cmp::Ordering;
-use num::{One, Zero, FromPrimitive, ToPrimitive};
+use num::{FromPrimitive, One, ToPrimitive, Zero};
 
 /// Extension methods for num::Integer trait.
 pub trait Integer: num::Integer + Clone + FromPrimitive + ToPrimitive {
@@ -128,7 +128,9 @@ pub trait Integer: num::Integer + Clone + FromPrimitive + ToPrimitive {
     fn into_palindromic(self, radix: Self, duplicate_middle: bool) -> Self {
         let digits = self.into_digits(radix.clone());
         let mut rv = digits.clone().rev();
-        if !duplicate_middle { let _ = rv.next_back(); }
+        if !duplicate_middle {
+            let _ = rv.next_back();
+        }
         rv.chain(digits).fold(Zero::zero(), |sum: Self, i| sum * radix.clone() + i)
     }
 
@@ -169,12 +171,12 @@ pub trait Integer: num::Integer + Clone + FromPrimitive + ToPrimitive {
             let mid2 = mid.clone() * mid.clone();
             match mid2.partial_cmp(self).unwrap() {
                 Ordering::Equal => return mid,
-                Ordering::Greater => { max = mid - one.clone() }
-                Ordering::Less    => { min = mid }
+                Ordering::Greater => max = mid - one.clone(),
+                Ordering::Less => min = mid,
             }
         }
 
-        return min
+        return min;
     }
 
     /// Gets the factorial of the number.
@@ -205,14 +207,16 @@ pub trait Integer: num::Integer + Clone + FromPrimitive + ToPrimitive {
     /// Takes the modular exponentation of the number.
     fn mod_pow(&self, exp: &Self, modulo: &Self) -> Self {
         let zero = Zero::zero();
-        let one: Self  = One::one();
-        let two: Self  = one.clone() + one.clone();
-        if *self == zero { return zero }
+        let one: Self = One::one();
+        let two: Self = one.clone() + one.clone();
+        if *self == zero {
+            return zero;
+        }
 
         let mut result = one.clone();
-        let mut base   = self.clone();
-        let mut exp    = exp.clone();
-        let     modulo = modulo.clone();
+        let mut base = self.clone();
+        let mut exp = exp.clone();
+        let modulo = modulo.clone();
 
         while exp > zero {
             if exp.is_odd() {
@@ -240,7 +244,11 @@ impl Integer for usize {}
 
 /// An iterator that enumerates each digit of a number.
 #[derive(Clone)]
-pub struct Digits<T> { num: T, radix: T, order: T }
+pub struct Digits<T> {
+    num: T,
+    radix: T,
+    order: T,
+}
 
 impl<T: num::Integer + Clone> Digits<T> {
     fn new(num: T, radix: T) -> Digits<T> {
@@ -255,7 +263,11 @@ impl<T: num::Integer + Clone> Digits<T> {
                 prod = order.clone() * radix.clone();
             }
         }
-        Digits { num: num, radix: radix, order: order }
+        Digits {
+            num: num,
+            radix: radix,
+            order: order,
+        }
     }
 }
 
@@ -264,9 +276,11 @@ impl<T: num::Integer + Clone> Iterator for Digits<T> {
 
     #[inline]
     fn next(&mut self) -> Option<T> {
-        if self.order.is_zero() { return None; }
+        if self.order.is_zero() {
+            return None;
+        }
         let (d, r) = self.num.div_rem(&self.radix);
-        self.num   = d;
+        self.num = d;
         self.order = self.order.clone() / self.radix.clone();
         Some(r)
     }
@@ -275,9 +289,11 @@ impl<T: num::Integer + Clone> Iterator for Digits<T> {
 impl<T: num::Integer + Clone> DoubleEndedIterator for Digits<T> {
     #[inline]
     fn next_back(&mut self) -> Option<T> {
-        if self.order.is_zero() { return None; }
+        if self.order.is_zero() {
+            return None;
+        }
         let (d, r) = self.num.div_rem(&self.order);
-        self.num   = r;
+        self.num = r;
         self.order = self.order.clone() / self.radix.clone();
         Some(d)
     }
@@ -368,9 +384,9 @@ mod tests {
 
     #[test]
     fn mod_pow() {
-        for b in (1u32 .. 10) {
-            for e in (0u32 .. 5) {
-                for r in (10u32 .. 100) {
+        for b in 1u32..10 {
+            for e in 0u32..5 {
+                for r in 10u32..100 {
                     assert_eq!(num::pow(b, e as usize) % r, b.mod_pow(&e, &r));
                 }
             }

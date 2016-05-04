@@ -4,20 +4,25 @@
         unused, unused_extern_crates, unused_import_braces,
         unused_qualifications, unused_results)]
 
-#![feature(iter_cmp)]
-
-#[macro_use(problem)] extern crate common;
+#[macro_use(problem)]
+extern crate common;
 
 fn get_cycle_len(n: u32) -> u32 {
-    if n == 1 { return 1 }
+    if n == 1 {
+        return 1;
+    }
     let mut buf = vec![None; n as usize];
     let mut rem = 1;
     let mut idx = 1u32;
     loop {
         let new_rem = rem % n;
         match buf[new_rem as usize] {
-            Some(i) => { return idx - i }
-            None    => { buf[new_rem as usize] = Some(idx); }
+            Some(i) => {
+                return idx - i;
+            }
+            None => {
+                buf[new_rem as usize] = Some(idx);
+            }
         }
         idx += 1;
         rem = new_rem * 10;
@@ -25,8 +30,8 @@ fn get_cycle_len(n: u32) -> u32 {
 }
 
 fn compute(limit: u32) -> u32 {
-    (2 .. limit)
-        .max_by(|&n| get_cycle_len(n))
+    (2..limit)
+        .max_by_key(|&n| get_cycle_len(n))
         .unwrap()
 }
 
